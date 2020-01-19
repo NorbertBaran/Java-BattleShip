@@ -4,12 +4,20 @@ import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Communication {
+public abstract class Communication {
     protected Socket socket;
     protected BattleShipsUser battleShipsUser;
     protected boolean win;
     protected String myStatus;
     protected Scanner scanner;
+
+    Communication(BattleShipsUser battleShipsUser){
+        this.battleShipsUser=battleShipsUser;
+        this.myStatus="start";
+        this.scanner=new Scanner(System.in);
+    }
+
+    public abstract void run();
 
     public void post(String content){
         try {
@@ -32,10 +40,6 @@ public class Communication {
             e.printStackTrace();
         }
         return line;
-    }
-
-    public boolean lastThrown(String status){
-        return true;
     }
 
     public void endOfGame(){

@@ -8,21 +8,25 @@ import java.util.Scanner;
 
 public class BattleShipsUser {
 
-    private String modeName;
-    private Mode mode;
-    private int portNumber;
+    private Communication communication;
     private Integer port;
-    private File mapFile;
-
     private String[] initMap;
     private String[] map;
     private String[] winMap;
-
     public int correctFieldCount;
-    private Thread modeThread;
 
-    public BattleShipsUser(String[] args){
+    public static void main(String[] args){
+        BattleShipsUser battleShipsUser=new BattleShipsUser(args);
+        battleShipsUser.displayMap();
+        battleShipsUser.run();
+    }
+
+    BattleShipsUser(String[] args){
         initGame(args);
+    }
+
+    private void run(){
+        communication.run();
     }
 
     private void initGame(String[] args){
@@ -32,7 +36,7 @@ public class BattleShipsUser {
         this.port=validPort(params.get("-port"));
         this.map=validMap(params.get("-map"));
         this.initMap=map.clone();
-        this.mode=validMode(params.get("-mode"));
+        this.communication=validMode(params.get("-mode"));
 
     }
 
@@ -57,25 +61,17 @@ public class BattleShipsUser {
         return params;
     }
 
-    private Mode validMode(String modeName){
-        Mode mode=null;
-        if(modeName.equals("server")){
-            mode=Mode.SERVER;
-            Server server = new Server(port, this);
-            modeThread=new Thread(server, "battleShipsServer");
-            modeThread.start();
-        }
-        else if(modeName.equals("client")){
-            mode=Mode.CLIENT;
-            Client client = new Client(port, this);
-            modeThread=new Thread(client, "battleShipsClient");
-            modeThread.start();
-        }
+    private Communication validMode(String modeName){
+        Communication communication=null;
+        if(modeName.equals("server"))
+            communication=new Server(port, this);
+        else if(modeName.equals("client"))
+            communication=new Client(port, this);
         else{
             System.out.println("Bad params. Correct param: -mode[server|client]");
             System.exit(1);
         }
-        return mode;
+        return communication;
     }
 
     private Integer validPort(String port){
@@ -106,7 +102,6 @@ public class BattleShipsUser {
         try {
             map=new String[10];
             Scanner mapScanner = new Scanner(mapFile);
-            int mapLineNr=0;
             for(int line=0; line<10; line++){
                 if (mapScanner.hasNextLine()) {
                     String mapLine = mapScanner.nextLine();
