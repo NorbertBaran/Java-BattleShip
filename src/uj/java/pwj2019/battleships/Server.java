@@ -12,26 +12,39 @@ public class Server implements Runnable {
     ServerSocket serverSocket;
     Socket socket;
     Scanner scanner;
+    boolean win;
+    String myStatus;
+
+    public void send(String response){
+        OutputStream output = null;
+        try {
+            output = socket.getOutputStream();
+            PrintWriter writer = new PrintWriter(output, true);
+            writer.println(response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String get(){
+        String line=null;
+        try {
+            InputStream input = socket.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(input));
+            line=reader.readLine();
+            System.out.println(line);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return line;
+    }
 
     @Override
     public void run() {
         try {
             socket = serverSocket.accept();
-            String myStatus;
-
-            boolean win;
-
             while (true){
-                InputStream input = socket.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-
-                OutputStream output = socket.getOutputStream();
-                PrintWriter writer = new PrintWriter(output, true);
-
-
-                String line = reader.readLine();
-                System.out.println(line);
-
+                String line = get();
                 String hisStatus=line.substring(0, line.indexOf(';'));
 
                 if(hisStatus.equals("ostatni zatopiony")){
@@ -41,59 +54,40 @@ public class Server implements Runnable {
                 }
 
                 String myField=line.substring(line.indexOf(';')+1);
-                //System.out.println("His status: "+hisStatus);
-                //System.out.println("My field: "+myField);
                 myStatus=battleShipsUser.getFieldStatus(myField);
-                //System.out.println(battleShipsUser.correctFieldCount);
-                //battleShipsUser.displayMap();
 
-                String hisField;
-                if(!myStatus.equals("ostatni zatopiony"))
-                    hisField=scanner.nextLine();
-                else{
+                if(myStatus.equals("ostatni zatopiony")){
                     System.out.println("Pzegrana");
-                    writer.println(myStatus+";\n");
+                    send(myStatus+";\n");
                     win=false;
                     break;
                 }
-                writer.println(myStatus+";"+hisField+"\n");
-            }
 
+                String hisField=scanner.nextLine();
+                send(myStatus+";"+hisField+"\n");
+            }
 
             if(win)
                 battleShipsUser.createWinMap();
-
             for(int i=0; i<10; i++){
-                OutputStream output = socket.getOutputStream();
-                PrintWriter writer = new PrintWriter(output, true);
-
-                InputStream input = socket.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(input));
-
                 if(!win)
-                    writer.println(battleShipsUser.getInitMapLine(i)+"\n");
+                    send(battleShipsUser.getInitMapLine(i)+"\n");
                 else
-                    writer.println(battleShipsUser.getWinMapLine(i)+"\n");
-
-                String line = reader.readLine();
-                System.out.println(line);
+                    send(battleShipsUser.getWinMapLine(i)+"\n");
+                get();
             }
-
             System.out.println();
-
             battleShipsUser.displayMap();
-
-
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    Server(int portNumber, BattleShipsUser battleShipsUser){
+    Server(int port, BattleShipsUser battleShipsUser){
         try {
             this.battleShipsUser=battleShipsUser;
-            serverSocket = new ServerSocket(portNumber);
+            serverSocket = new ServerSocket(port);
             scanner=new Scanner(System.in);
         } catch (IOException e) {
             e.printStackTrace();

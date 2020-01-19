@@ -2,72 +2,107 @@ package uj.java.pwj2019.battleships;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.*;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 public class BattleShipsUser {
 
     private String modeName;
+    private Mode mode;
     private int portNumber;
+    private Integer port;
     private File mapFile;
 
-    private String[] map;
     private String[] initMap;
+    private String[] map;
     private String[] winMap;
 
     public int correctFieldCount;
     private Thread modeThread;
 
     public BattleShipsUser(String[] args){
-        setStartParams(args);
-        loadMap();
-        setMode();
-        initMap=map.clone();
+        initGame(args);
     }
 
-    private void setStartParams(String[] args){
+    private void initGame(String[] args){
+
+        Map<String, String> params=validParamsName(args);
+
+        this.port=validPort(params.get("-port"));
+        this.map=validMap(params.get("-map"));
+        this.initMap=map.clone();
+        this.mode=validMode(params.get("-mode"));
+
+    }
+
+    private Map<String, String> validParamsName(String[] args){
+        Map<String, String> params=new HashMap<>();
         if(args.length!=6){
-            System.out.println("Bad params. Too few params");
+            System.out.println("Bad params. Bad count of params.");
             System.exit(1);
         }
-
-        var params=new HashMap<String, String>();
-
         for(int i=0; i<args.length; i=i+2){
             if(args[i].charAt(0)=='-' && i+1<args.length && args[i+1].charAt(0)!='-')
                 params.put(args[i], args[i+1]);
+            else{
+                System.out.println("Bad params. You need define -mode, -port and -map params");
+                System.exit(1);
+            }
         }
-
-        if(params.containsKey("-mode") && params.containsKey("-port") && params.containsKey("-map")) {
-
-            modeName =params.get("-mode");
-            if(!modeName.equals("server") && !modeName.equals("client")){
-                System.out.println("Bad params. Correct param: -mode[server|client]");
-                System.exit(1);
-            }
-
-            try{
-                portNumber =Integer.parseInt(params.get("-port"));
-            }catch(Exception e){
-                System.out.println("Bad params. Port need to be number");
-                System.exit(1);
-            }
-
-            mapFile =new File(params.get("-map"));
-            if(!mapFile.exists() || !mapFile.isFile()){
-                System.out.println("Bad params. File not exists or it is not file");
-                System.exit(1);
-            }
-
-        }else{
+        if(!params.containsKey("-mode") || !params.containsKey("-port") || !params.containsKey("-map")){
             System.out.println("Bad params. You need define -mode, -port and -map params");
             System.exit(1);
         }
+        return params;
     }
 
-    private void loadMap(){
+    private Mode validMode(String modeName){
+        Mode mode=null;
+        if(modeName.equals("server")){
+            mode=Mode.SERVER;
+            Server server = new Server(port, this);
+            modeThread=new Thread(server, "battleShipsServer");
+            modeThread.start();
+        }
+        else if(modeName.equals("client")){
+            mode=Mode.CLIENT;
+            Client client = new Client(port, this);
+            modeThread=new Thread(client, "battleShipsClient");
+            modeThread.start();
+        }
+        else{
+            System.out.println("Bad params. Correct param: -mode[server|client]");
+            System.exit(1);
+        }
+        return mode;
+    }
+
+    private Integer validPort(String port){
+        Integer portNumber=null;
+        try{
+            portNumber=Integer.parseInt(port);
+        }catch(Exception e){
+            System.out.println("Bad params. Port need to be number");
+            System.exit(1);
+        }
+        return portNumber;
+    }
+
+    private String[] validMap(String mapSrc){
+        String[] map=null;
+        File mapFile=new File(mapSrc);
+        if(mapFile.exists() && mapFile.isFile())
+            map=loadMap(mapFile);
+        else{
+            System.out.println("Bad params. File not exists or it is not file");
+            System.exit(1);
+        }
+        return map;
+    }
+
+    private String[] loadMap(File mapFile){
+        String[] map=null;
         try {
             map=new String[10];
             Scanner mapScanner = new Scanner(mapFile);
@@ -80,8 +115,7 @@ public class BattleShipsUser {
                         mapScanner.close();
                         System.exit(2);
                     }
-                    map[mapLineNr] = mapLine;
-                    mapLineNr++;
+                    map[line] = mapLine;
                 }else{
                     System.out.println("Map not correct");
                     mapScanner.close();
@@ -98,18 +132,7 @@ public class BattleShipsUser {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-    }
-
-    private void setMode(){
-        if(modeName.equals("server")){
-            Server server = new Server(portNumber, this);
-            modeThread=new Thread(server, "battleShipsServer");
-            modeThread.start();
-        }else{
-            Client client = new Client(portNumber, this);
-            modeThread=new Thread(client, "battleShipsClient");
-            modeThread.start();
-        }
+        return map;
     }
 
     public void displayMap(){
