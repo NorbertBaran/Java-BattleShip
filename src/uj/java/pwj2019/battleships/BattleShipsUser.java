@@ -13,7 +13,7 @@ public class BattleShipsUser {
     private char[][] initMap;
     private char[][] map;
     private char[][] winMap;
-    public int correctFieldCount;
+    private int correctFieldCount;
 
     public static void main(String[] args){
         BattleShipsUser battleShipsUser=new BattleShipsUser(args);
@@ -21,7 +21,7 @@ public class BattleShipsUser {
         battleShipsUser.run();
     }
 
-    BattleShipsUser(String[] args){
+    private BattleShipsUser(String[] args){
         initGame(args);
     }
 
@@ -35,8 +35,7 @@ public class BattleShipsUser {
 
         this.port=validPort(params.get("-port"));
         this.map=validMap(params.get("-map"));
-        this.initMap=new char[10][10];
-        clone(this.initMap, this.map);
+        this.initMap=clone(this.map);
         this.communication=validMode(params.get("-mode"));
 
     }
@@ -132,12 +131,12 @@ public class BattleShipsUser {
         return map;
     }
 
-    public void displayMap(){
+    void displayMap(){
         for(int line=0; line<10; line++)
             System.out.println(map[line]);
     }
 
-    public String getFieldStatus(String field){
+    String getFieldStatus(String field){
         int column=field.charAt(0)-'A';
         int row=Integer.parseInt(field.substring(1));
         row--;
@@ -148,8 +147,7 @@ public class BattleShipsUser {
             if(correctFieldCount==0){
                 return "ostatni zatopiony";
             }
-            char[][] mapCopy=new char[10][10];
-            clone(mapCopy, map);
+            char[][] mapCopy=clone(map);
             if(thrown(row, column, mapCopy))
                 return "trafiony zatopiony";
             return "trafiony";
@@ -162,8 +160,6 @@ public class BattleShipsUser {
     private boolean thrown(int row, int column, char[][] mapCopy){
         mapCopy[row][column]='x';
 
-        boolean zatopiony=true;
-
         if(column>0 && mapCopy[row][column-1]=='#')
             return false;
         if(column<9 && mapCopy[row][column+1]=='#')
@@ -173,49 +169,47 @@ public class BattleShipsUser {
         if(row<9 && mapCopy[row+1][column]=='#')
             return false;
 
-        if(column>0 && mapCopy[row][column-1]=='@')
-            zatopiony= thrown(row, column-1, mapCopy);
-        if(column<9 && mapCopy[row][column+1]=='@')
-            zatopiony= thrown(row, column+1, mapCopy);
-        if(row>0 && mapCopy[row-1][column]=='@')
-            zatopiony= thrown(row-1, column, mapCopy);
-        if(row<9 && mapCopy[row+1][column]=='@')
-            zatopiony= thrown(row+1, column, mapCopy);
+        if(column>0 && mapCopy[row][column-1]=='@' && !thrown(row, column-1, mapCopy))
+            return false;
+        if(column<9 && mapCopy[row][column+1]=='@' && !thrown(row, column+1, mapCopy))
+            return false;
+        if(row>0 && mapCopy[row-1][column]=='@' && !thrown(row-1, column, mapCopy))
+            return false;
+        if(row<9 && mapCopy[row+1][column]=='@' && !thrown(row+1, column, mapCopy))
+            return false;
 
-        return zatopiony;
+        return true;
     }
 
     String getInitMapLine(int line){
         return String.valueOf(initMap[line]);
     }
 
-    public boolean thrownNeighbour(int i, int j){
-        char[][] mapCopy=new char[10][10];
-        clone(mapCopy, map);
+    private boolean thrownNeighbour(int i, int j){
 
-        if(i>0 && map[i-1][j]=='@' && thrown(i-1, j, mapCopy))
+        if(i>0 && map[i-1][j]=='@' && thrown(i-1, j, clone(map)))
             return true;
-        if(i<9 && map[i+1][j]=='@' && thrown(i+1, j, mapCopy))
+        if(i<9 && map[i+1][j]=='@' && thrown(i+1, j, clone(map)))
             return true;
-        if(j>0 && map[i][j-1]=='@' && thrown(i, j-1, mapCopy))
+        if(j>0 && map[i][j-1]=='@' && thrown(i, j-1, clone(map)))
             return true;
-        if(j<9 && map[i][j+1]=='@' && thrown(i, j+1, mapCopy))
+        if(j<9 && map[i][j+1]=='@' && thrown(i, j+1, clone(map)))
             return true;
 
-        if(i>0 && j>0 && map[i-1][j-1]=='@' && thrown(i-1, j-1, mapCopy))
+        if(i>0 && j>0 && map[i-1][j-1]=='@' && thrown(i-1, j-1, clone(map)))
             return true;
-        if(i>0 && j<9 && map[i-1][j+1]=='@' && thrown(i-1, j+1, mapCopy))
+        if(i>0 && j<9 && map[i-1][j+1]=='@' && thrown(i-1, j+1, clone(map)))
             return true;
-        if(i<9 && j>0 && map[i+1][j-1]=='@' && thrown(i+1, j-1, mapCopy))
+        if(i<9 && j>0 && map[i+1][j-1]=='@' && thrown(i+1, j-1, clone(map)))
             return true;
-        if(i<9 && j<9 && map[i+1][j+1]=='@' && thrown(i+1, j+1, mapCopy))
+        if(i<9 && j<9 && map[i+1][j+1]=='@' && thrown(i+1, j+1, clone(map)))
             return true;
+
         return false;
     }
 
-    public void createWinMap(){
-        winMap=new char[10][10];
-        clone(winMap, map);
+    void createWinMap(){
+        winMap=clone(map);
         for(int i=0; i<10; i++){
             for(int j=0; j<10; j++){
                 if(map[i][j]=='~')
@@ -237,10 +231,10 @@ public class BattleShipsUser {
         return String.valueOf(winMap[line]);
     }
 
-    private void clone(char[][] to, char[][] from){
+    private char[][] clone(char[][] from){
+        char[][] to =new char[10][10] ;
         for(int i=0; i<10; i++)
-            for(int j=0; j<10; j++)
-                to[i][j]=from[i][j];
+            System.arraycopy(from[i], 0, to[i], 0, 10);
+        return to;
     }
-
 }

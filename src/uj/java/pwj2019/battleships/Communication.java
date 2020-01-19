@@ -5,11 +5,11 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public abstract class Communication {
-    protected Socket socket;
-    protected BattleShipsUser battleShipsUser;
-    protected boolean win;
-    protected String myStatus;
-    protected Scanner scanner;
+    Socket socket;
+    private BattleShipsUser battleShipsUser;
+    private boolean win;
+    private String myStatus;
+    private Scanner scanner;
 
     Communication(BattleShipsUser battleShipsUser){
         this.battleShipsUser=battleShipsUser;
@@ -19,7 +19,7 @@ public abstract class Communication {
 
     public abstract void run();
 
-    public void post(String content){
+    private void post(String content){
         try {
             OutputStream output = socket.getOutputStream();
             PrintWriter writer = new PrintWriter(output, true);
@@ -29,7 +29,7 @@ public abstract class Communication {
         }
     }
 
-    public String get(){
+    private String get(){
         String line=null;
         try {
             InputStream input = socket.getInputStream();
@@ -42,7 +42,7 @@ public abstract class Communication {
         return line;
     }
 
-    public void endOfGame(){
+    void endOfGame(){
         if(win){
             battleShipsUser.createWinMap();
             for(int i=0; i<10; i++){
@@ -59,7 +59,7 @@ public abstract class Communication {
         battleShipsUser.displayMap();
     }
 
-    public boolean postAction(){
+    boolean postAction(){
         if(myStatus.equals("ostatni zatopiony")){
             System.out.println("Pzegrana");
             post(myStatus+";\n");
@@ -73,7 +73,7 @@ public abstract class Communication {
         return true;
     }
 
-    public boolean getAction(){
+    boolean getAction(){
         String line = get();
         String hisStatus=line.substring(0, line.indexOf(';'));
 

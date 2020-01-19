@@ -2,7 +2,6 @@ package uj.java.pwj2019.battleships;
 
 import java.io.*;
 import java.net.ServerSocket;
-import java.util.Scanner;
 
 public class Server extends Communication{
     private ServerSocket serverSocket;
