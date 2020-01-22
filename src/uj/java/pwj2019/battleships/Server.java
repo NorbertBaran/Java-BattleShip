@@ -2,6 +2,7 @@ package uj.java.pwj2019.battleships;
 
 import java.io.*;
 import java.net.ServerSocket;
+import java.net.SocketException;
 
 public class Server extends Communication{
     private ServerSocket serverSocket;
@@ -9,6 +10,8 @@ public class Server extends Communication{
     @Override
     public void run() {
         while (true){
+            if(!validGetAction())
+                myField="mistake";
             if(!getAction())
                 break;
             if(!postAction())
@@ -26,5 +29,4 @@ public class Server extends Communication{
             e.printStackTrace();
         }
     }
-
 }

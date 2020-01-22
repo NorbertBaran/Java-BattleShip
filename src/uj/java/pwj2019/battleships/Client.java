@@ -10,6 +10,8 @@ public class Client extends Communication {
         while(true) {
             if(!postAction())
                 break;
+            if(!validGetAction())
+                myField="mistake";
             if(!getAction())
                 break;
         }
@@ -21,7 +23,9 @@ public class Client extends Communication {
         try {
             socket = new Socket("localhost", port);
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("Błąd komunikacji");
+            System.exit(0);
         }
     }
 }

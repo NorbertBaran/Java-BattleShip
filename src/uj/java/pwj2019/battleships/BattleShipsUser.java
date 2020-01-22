@@ -44,19 +44,19 @@ public class BattleShipsUser {
         Map<String, String> params=new HashMap<>();
         if(args.length!=6){
             System.out.println("Bad params. Bad count of params.");
-            System.exit(1);
+            System.exit(0);
         }
         for(int i=0; i<args.length; i=i+2){
             if(args[i].charAt(0)=='-' && i+1<args.length && args[i+1].charAt(0)!='-')
                 params.put(args[i], args[i+1]);
             else{
                 System.out.println("Bad params. You need define -mode, -port and -map params");
-                System.exit(1);
+                System.exit(0);
             }
         }
         if(!params.containsKey("-mode") || !params.containsKey("-port") || !params.containsKey("-map")){
             System.out.println("Bad params. You need define -mode, -port and -map params");
-            System.exit(1);
+            System.exit(0);
         }
         return params;
     }
@@ -69,7 +69,7 @@ public class BattleShipsUser {
             communication=new Client(port, this);
         else{
             System.out.println("Bad params. Correct param: -mode[server|client]");
-            System.exit(1);
+            System.exit(0);
         }
         return communication;
     }
@@ -80,7 +80,7 @@ public class BattleShipsUser {
             portNumber=Integer.parseInt(port);
         }catch(Exception e){
             System.out.println("Bad params. Port need to be number");
-            System.exit(1);
+            System.exit(0);
         }
         return portNumber;
     }
@@ -92,7 +92,7 @@ public class BattleShipsUser {
             map=loadMap(mapFile);
         else{
             System.out.println("Bad params. File not exists or it is not file");
-            System.exit(1);
+            System.exit(0);
         }
         return map;
     }
@@ -108,20 +108,20 @@ public class BattleShipsUser {
                     if (mapLine.length() != 10) {
                         System.out.println("Map not correct");
                         mapScanner.close();
-                        System.exit(2);
+                        System.exit(0);
                     }
                     for(int i=0; i<10; i++)
                         map[line][i] = mapLine.charAt(i);
                 }else{
                     System.out.println("Map not correct");
                     mapScanner.close();
-                    System.exit(2);
+                    System.exit(0);
                 }
             }
             if(mapScanner.hasNextLine() && mapScanner.nextLine().length()>0){
                 System.out.println("Map not correct");
                 mapScanner.close();
-                System.exit(2);
+                System.exit(0);
             }
             mapScanner.close();
             correctFieldCount=20;
@@ -137,6 +137,8 @@ public class BattleShipsUser {
     }
 
     String getFieldStatus(String field){
+        if(field.equals("mistake"))
+            return "mistake";
         int column=field.charAt(0)-'A';
         int row=Integer.parseInt(field.substring(1));
         row--;
